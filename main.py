@@ -28,7 +28,6 @@ options.add_argument("--disable-extensions")
 options.add_argument("--disable-infobars")
 options.add_argument("--window-size=1920x1080")
 
-
 driver = webdriver.Chrome(
     seleniumwire_options=seleniumwire_options,
     options=options
@@ -37,32 +36,25 @@ driver = webdriver.Chrome(
 def get_price(product_name):
     query = product_name.replace(" ", "+")
     driver.get(f"https://www.amazon.com/s?k={query}&field-keywords={query}")
-
     try:
-        # Wait for the product grid to load
+        # Wait for the main search result to load
         WebDriverWait(driver, 30).until(
-            EC.presence_of_element_located((By.CSS_SELECTOR, "div.s-main-slot"))
+            EC.presence_of_element_located((By.XPATH, "//*[@cel_widget_id='MAIN-SEARCH_RESULTS-5']"))
         )
-        results = driver.find_elements(By.CSS_SELECTOR, "div.s-main-slot div[data-component-type='s-search-result']")
-        for result in results:
-            # Skip if "Sponsored"
-            try:
-                print("yo")
-                badge = result.find_element(By.CSS_SELECTOR, "span.s-label-popover-default")
-                print(badge)
-                if "Sponsored" in badge.text:
-                    continue  # Skip this result if it is sponsored
-            except:
-                pass
+        # Find the main search result
+        result = driver.find_element(By.XPATH, "//*[@cel_widget_id='MAIN-SEARCH_RESULTS-5']")
+
         try:
-            price_element = driver.find_element(By.CSS_SELECTOR, "span.a-price > span.a-offscreen")
+            # Get the product price
+            price_element = result.find_element(By.CSS_SELECTOR, "span.a-price > span.a-offscreen")
             price = price_element.get_attribute("outerHTML")
+
+            
             print(f"Price: {get_int_from_outerhtml(price)}")
             return price
-        except:
-            print("Price not found")
-            return None  # Skip if price not found
-
+        except Exception as e:
+            print(f"Error finding price or title: {e}")
+            return None  # Skip if price or title not found
     except Exception as e:
         print(f"Error: {e}")
     finally:
@@ -76,5 +68,5 @@ def get_int_from_outerhtml(outerhtml):
     return ''.join(price)
 
 if __name__ == "__main__":
-    get_price(product_name = input("Enter the product name: "))
+    get_price(product_name=input("Enter the product name: "))
 
