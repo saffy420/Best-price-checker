@@ -1,13 +1,13 @@
 from seleniumwire import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
-from fake_useragent import UserAgent
 from webdriver_manager.chrome import ChromeDriverManager
 import random
 import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from fake_useragent import UserAgent
 
 proxy_url = "http://pcDCKl5YiW-res-us:PC_1dYtl5BcqA7Zz4j7e@proxy-us.proxy-cheap.com:5959"
 
@@ -18,11 +18,16 @@ seleniumwire_options = {
     }
 }
 
+# Initialize the UserAgent object
+ua = UserAgent()
+
+# Get a random user agent
+random_user_agent = ua.random
+
 options = Options()
 options.add_argument("--disable-gpu")
-options.add_argument(f"user-agent={UserAgent().random}")
+options.add_argument(f"user-agent={random_user_agent}")
 options.add_argument("--no-sandbox")
-options.add_argument("--headless")
 options.add_argument("--disable-dev-shm-usage")
 options.add_argument("--disable-extensions")
 options.add_argument("--disable-infobars")
@@ -47,12 +52,12 @@ def get_price(product_name):
         for result in results:
             # Skip if "Sponsored"
             try:
-                print("yo")
-                badge = result.find_element(By.CSS_SELECTOR, "span.s-label-popover-default")
-                print(badge)
+                badge = result.find_element(By.CSS_SELECTOR, "aok-inline-block s-ad-feedback-label puis-sponsored-label-text")
+                print(f"Badge text: {badge.text}")  # Debugging line
                 if "Sponsored" in badge.text:
                     continue  # Skip this result if it is sponsored
-            except:
+            except Exception as e:
+                print(f"Exception: {e}")  # Debugging line
                 pass
         try:
             price_element = driver.find_element(By.CSS_SELECTOR, "span.a-price > span.a-offscreen")
@@ -66,7 +71,7 @@ def get_price(product_name):
     except Exception as e:
         print(f"Error: {e}")
     finally:
-        driver.quit()
+        return None
 
 def get_int_from_outerhtml(outerhtml):
     price = []
