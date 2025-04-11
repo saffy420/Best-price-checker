@@ -40,8 +40,8 @@ class AmazonScraper:
                 price_element = result.find_element(By.CSS_SELECTOR, "span.a-price > span.a-offscreen")
                 price = price_element.get_attribute("outerHTML")
                 
-                print(f"Price: {get_price_from_html(price)}")
-                return price
+                
+                return get_price_from_html(price)
             except Exception as e:
                 print(f"Error finding price or title: {e}")
                 return None  # Skip if price or title not found
@@ -51,3 +51,4 @@ class AmazonScraper:
         finally:
             if self.driver:
                 self.driver.quit() 
+

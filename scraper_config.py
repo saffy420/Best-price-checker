@@ -27,14 +27,11 @@ def get_chrome_options():
     options.add_argument("--disable-gpu")
     options.add_argument(f"user-agent={UserAgent().random}")
     options.add_argument("--no-sandbox")
-    #options.add_argument("--headless")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-extensions")
     options.add_argument("--disable-infobars")
     options.add_argument("--window-size=1920x1080")
     options.add_argument("--enable-unsafe-swiftshader")
-    options.add_argument("--disable-headless")
-    
     
     return options
 

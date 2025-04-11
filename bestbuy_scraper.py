@@ -48,9 +48,4 @@ class BestBuyScraper:
             if self.driver:
                 self.driver.quit() 
 
-scraper = BestBuyScraper()
-price = scraper.get_price("jbl flip 6")
-print(f"Final Price: {price}")
-
-
 
