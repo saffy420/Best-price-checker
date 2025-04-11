@@ -13,7 +13,7 @@ class NeweggScraper:
         self.driver = None
 
     def get_price(self, product_name):
-        max_attempts = 3
+        max_attempts = 10
         attempts = 0
         
         try:
@@ -43,27 +43,27 @@ class NeweggScraper:
                     
                     # Wait for the search results to load
                     WebDriverWait(self.driver, 30).until(
-                        EC.presence_of_element_located((By.CLASS_NAME, "item-open-box-italic"))
+                        EC.presence_of_element_located((By.CSS_SELECTOR, ".item-container.position-relative"))
                     )
                     
                     # Find the product by matching the class name
                     result = WebDriverWait(self.driver, 10).until(
-                        EC.presence_of_element_located((By.CLASS_NAME, "item-open-box-italic"))
+                        EC.presence_of_element_located((By.CSS_SELECTOR, ".item-container.position-relative"))
                     )
                     
-                    print(result.get_attribute("outerHTML"))
+                    
 
                     # Get the product price
                     price_element = result.find_element(By.CSS_SELECTOR, "li.price-current")
                     dollars = price_element.find_element(By.TAG_NAME, "strong").text
                     cents = price_element.find_element(By.TAG_NAME, "sup").text
-                    price = f"${dollars}.{cents}"
+                    price = f"${dollars}{cents}"
                     
-                    print(f"Price: {price}")
+                    print(f"Newegg Price: {price}")
                     return price
                     
                 except Exception as e:
-                    print(f"Error: {e}")
+                    print(f" Newegg Error: {e}")
                     attempts += 1
                     
                     # Close the current driver before retrying
@@ -83,6 +83,4 @@ class NeweggScraper:
                 self.driver = None
 
 
-scraper = NeweggScraper()
-price = scraper.get_price("jbl flip 6")
-print(f"Final Price: {price}")
+

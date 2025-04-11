@@ -36,16 +36,14 @@ class BestBuyScraper:
                 price_element = result.find_element(By.CSS_SELECTOR, "div.priceView-customer-price span[aria-hidden='true']")
                 price = price_element.get_attribute("innerHTML")
                 
-                print(f"Price: {get_price_from_html(price)}")
+                print(f"Best Buy Price: {get_price_from_html(price)}")
                 return price
             except Exception as e:
-                print(f"Error finding price: {e}")
+                print(f"Best Buy Error finding price: {e}")
                 return None
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"Best Buy Error: {e}")
             return None
         finally:
             if self.driver:
                 self.driver.quit() 
-
-

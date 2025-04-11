@@ -30,7 +30,7 @@ class AmazonScraper:
             
             # Wait for the main search result to load
             WebDriverWait(self.driver, 30).until(
-                EC.presence_of_element_located((By.XPATH, "//*[@cel_widget_id='MAIN-SEARCH_RESULTS-5']"))
+                EC.presence_of_element_located((By.XPATH, "//*[contains(@cel_widget_id, 'MAIN-SEARCH_RESULTS-')]"))
             )
             # Find the main search result
             result = self.driver.find_element(By.XPATH, "//*[@cel_widget_id='MAIN-SEARCH_RESULTS-5']")
@@ -40,15 +40,18 @@ class AmazonScraper:
                 price_element = result.find_element(By.CSS_SELECTOR, "span.a-price > span.a-offscreen")
                 price = price_element.get_attribute("outerHTML")
                 
-                
+                print(f"Amazon Price: {get_price_from_html(price)}")
                 return get_price_from_html(price)
             except Exception as e:
-                print(f"Error finding price or title: {e}")
+                print(f"Amazon Error finding price or title: {e}")
                 return None  # Skip if price or title not found
-        except Exception as e:
-            print(f"Error: {e}")
+        except TypeError as e:
+            print(f"Amazon Error: {e}")
             return None
         finally:
             if self.driver:
                 self.driver.quit() 
 
+scraper = AmazonScraper()
+price = scraper.get_price("jbl flip 6")
+print(f"Final Price: {price}")

@@ -24,14 +24,32 @@ def get_proxy_config():
 
 def get_chrome_options():
     options = Options()
-    options.add_argument("--disable-gpu")
-    options.add_argument(f"user-agent={UserAgent().random}")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-extensions")
-    options.add_argument("--disable-infobars")
-    options.add_argument("--window-size=1920x1080")
-    options.add_argument("--enable-unsafe-swiftshader")
+    
+    #Performance optimizations
+    #options.add_argument('--no-sandbox')
+    #options.add_argument('--disable-dev-shm-usage')
+    #options.add_argument('--disable-gpu')
+    #options.add_argument('--disable-extensions')
+    #options.add_argument('--disable-infobars')
+    options.add_argument('--headless')
+    #options.add_argument('--blink-settings=imagesEnabled=false')
+    #options.add_argument('--disable-javascript')
+    
+    #Memory optimizations
+    #options.add_argument('--disable-dev-tools')
+    #options.add_argument('--no-zygote')
+    #options.add_argument('--disable-logging')
+    #options.add_argument('--disable-blink-features=AutomationControlled')
+    
+    #Add preferences for faster loading
+    #options.add_experimental_option('prefs', {
+    #    'profile.default_content_setting_values': {
+    #        'images': 2,
+    #        'plugins': 2,
+    #        'popups': 2,
+    #        'notifications': 2
+    #    }
+    #})
     
     return options
 
