@@ -90,4 +90,3 @@ def get_chrome_options():
     options.add_experimental_option('prefs', prefs)
     
     return options
-

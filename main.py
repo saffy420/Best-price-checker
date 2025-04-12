@@ -1,6 +1,7 @@
 from amazon_scraper import AmazonScraper
 from bestbuy_scraper import BestBuyScraper
 from newegg_scraper import NeweggScraper
+from walmart_scraper import WalmartScraper
 from concurrent.futures import ThreadPoolExecutor
 import time
 
@@ -16,6 +17,10 @@ def get_newegg_price(product_name):
     newegg_scraper = NeweggScraper()
     return ("Newegg", newegg_scraper.get_price(product_name))
 
+def get_walmart_price(product_name):
+    walmart_scraper = WalmartScraper()
+    return ("Walmart", walmart_scraper.get_price(product_name))
+
 def get_prices(product_name):
     start_time = time.time()
     
@@ -23,11 +28,12 @@ def get_prices(product_name):
     tasks = [
         get_amazon_price,
         get_bestbuy_price,
-        get_newegg_price
+        get_newegg_price,
+        get_walmart_price
     ]
     
     # Run all scrapers concurrently
-    with ThreadPoolExecutor(max_workers=3) as executor:
+    with ThreadPoolExecutor(max_workers=4) as executor:
         # Submit all tasks and get their futures
         futures = [executor.submit(task, product_name) for task in tasks]
         

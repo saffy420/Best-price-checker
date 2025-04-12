@@ -20,11 +20,8 @@ class BestBuyScraper:
             options=self.options
         )
         
-        print("Driver initialized")
         try:
             query = product_name.replace(" ", "+")
-            print("Query: ", query)
-            start_time = time.time()
             
             # Set timeouts
             self.driver.set_page_load_timeout(self.timeout)
@@ -32,7 +29,6 @@ class BestBuyScraper:
             
             # Load the page
             self.driver.get(f"https://www.bestbuy.com/site/searchpage.jsp?st={query}")
-            print(f"Time taken to load Best Buy: {time.time() - start_time:.2f} seconds")
             
             try:
                 # Wait for search results container
@@ -60,8 +56,9 @@ class BestBuyScraper:
                     
                     price = price_element.get_attribute("innerHTML")
                     parsed_price = get_price_from_html(price)
-                    print(f"Best Buy Price: {parsed_price}")
-                    return parsed_price
+                    formatted_price = f"${parsed_price}" if not parsed_price.startswith('$') else parsed_price
+                    print(f"Best Buy Price: {formatted_price}")
+                    return formatted_price
                 except TimeoutException as e:
                     print(f"Best Buy Error: Price element not found within {self.timeout} seconds")
                     return None
@@ -78,4 +75,3 @@ class BestBuyScraper:
         finally:
             if self.driver:
                 self.driver.quit()
-

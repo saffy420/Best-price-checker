@@ -22,7 +22,6 @@ class AmazonScraper:
         
         try:
             query = product_name.replace(" ", "+")
-            start_time = time.time()
             
             # Set timeouts
             self.driver.set_page_load_timeout(self.timeout)
@@ -30,10 +29,9 @@ class AmazonScraper:
             
             # Load the page
             self.driver.get(f"https://www.amazon.com/s?k={query}&field-keywords={query}")
-            print(f"Time taken to load Amazon: {time.time() - start_time:.2f} seconds")
             
             try:
-                # Use consistent timeout for initial load
+                # Wait for search results container
                 WebDriverWait(self.driver, self.timeout).until(
                     EC.presence_of_element_located((By.XPATH, "//*[contains(@cel_widget_id, 'MAIN-SEARCH_RESULTS-')]"))
                 )
@@ -51,8 +49,9 @@ class AmazonScraper:
                     price_element = result.find_element(By.CSS_SELECTOR, "span.a-price > span.a-offscreen")
                     price = price_element.get_attribute("outerHTML")
                     parsed_price = get_price_from_html(price)
-                    print(f"Amazon Price: {parsed_price}")
-                    return parsed_price
+                    formatted_price = f"${parsed_price}" if not parsed_price.startswith('$') else parsed_price
+                    print(f"Amazon Price: {formatted_price}")
+                    return formatted_price
                 except Exception as e:
                     print(f"Amazon Error finding price: {e}")
                     
@@ -61,8 +60,9 @@ class AmazonScraper:
                         price_element = result.find_element(By.CSS_SELECTOR, "span.a-price")
                         price = price_element.get_attribute("outerHTML")
                         parsed_price = get_price_from_html(price)
-                        print(f"Amazon Price (fallback): {parsed_price}")
-                        return parsed_price
+                        formatted_price = f"${parsed_price}" if not parsed_price.startswith('$') else parsed_price
+                        print(f"Amazon Price (fallback): {formatted_price}")
+                        return formatted_price
                     except:
                         return None
             else:
@@ -75,4 +75,7 @@ class AmazonScraper:
         finally:
             if self.driver:
                 self.driver.quit()
+
+
+
 

@@ -34,16 +34,14 @@ class NeweggScraper:
                 self.driver.set_script_timeout(self.timeout)
                 
                 query = product_name.replace(" ", "+")
-                start_time = time.time()
                 
                 # Load the page
                 self.driver.get(f"https://www.newegg.com/p/pl?d={query}")
-                print(f"Time taken to load Newegg: {time.time() - start_time:.2f} seconds")
                 
                 # Quick check for 404 page
                 try:
                     if self.driver.find_elements(By.CLASS_NAME, "page-404-text"):
-                        print(f"404 page detected, retrying (attempt {attempts+1}/{self.max_retries})...")
+                        print(f"Newegg 404 page detected, retrying (attempt {attempts+1}/{self.max_retries})...")
                         attempts += 1
                         time.sleep(self.retry_delay)
                         continue
@@ -51,7 +49,7 @@ class NeweggScraper:
                     pass
                 
                 try:
-                    # Use consistent timeout for initial load
+                    # Wait for search results container
                     WebDriverWait(self.driver, self.timeout).until(
                         EC.presence_of_element_located((By.CSS_SELECTOR, ".item-container"))
                     )
@@ -96,7 +94,3 @@ class NeweggScraper:
         if self.driver:
             self.driver.quit()
             self.driver = None
-
-
-
-
