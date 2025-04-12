@@ -4,19 +4,15 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from price_parser import get_price_from_html
 from scraper_config import get_proxy_config, get_chrome_options
+from selenium.webdriver.support.wait import TimeoutException
+import time
 
 class AmazonScraper:
     def __init__(self):
         self.seleniumwire_options = get_proxy_config()
         self.options = get_chrome_options()
         self.driver = None
-
-    def _get_int_from_outerhtml(self, outerhtml):
-        price = []
-        for i in outerhtml:
-            if i.isdigit() or i == ".":
-                price.append(i)   
-        return ''.join(price)
+        self.timeout = 20  # Set consistent timeout
 
     def get_price(self, product_name):
         self.driver = webdriver.Chrome(
@@ -26,32 +22,57 @@ class AmazonScraper:
         
         try:
             query = product_name.replace(" ", "+")
-            self.driver.get(f"https://www.amazon.com/s?k={query}&field-keywords={query}")
+            start_time = time.time()
             
-            # Wait for the main search result to load
-            WebDriverWait(self.driver, 30).until(
-                EC.presence_of_element_located((By.XPATH, "//*[contains(@cel_widget_id, 'MAIN-SEARCH_RESULTS-')]"))
-            )
-            # Find the main search result
-            result = self.driver.find_element(By.XPATH, "//*[@cel_widget_id='MAIN-SEARCH_RESULTS-5']")
-
+            # Set timeouts
+            self.driver.set_page_load_timeout(self.timeout)
+            self.driver.set_script_timeout(self.timeout)
+            
+            # Load the page
+            self.driver.get(f"https://www.amazon.com/s?k={query}&field-keywords={query}")
+            print(f"Time taken to load Amazon: {time.time() - start_time:.2f} seconds")
+            
             try:
-                # Get the product price
-                price_element = result.find_element(By.CSS_SELECTOR, "span.a-price > span.a-offscreen")
-                price = price_element.get_attribute("outerHTML")
+                # Use consistent timeout for initial load
+                WebDriverWait(self.driver, self.timeout).until(
+                    EC.presence_of_element_located((By.XPATH, "//*[contains(@cel_widget_id, 'MAIN-SEARCH_RESULTS-')]"))
+                )
+            except TimeoutException:
+                # If timeout occurs, try to find element anyway
+                pass
+            
+            # Try to find results without waiting
+            results = self.driver.find_elements(By.XPATH, "//*[contains(@cel_widget_id, 'MAIN-SEARCH_RESULTS-')]")
+            
+            if results:
+                result = results[0]  # Take the first result
+                try:
+                    # Try to get price directly without waiting
+                    price_element = result.find_element(By.CSS_SELECTOR, "span.a-price > span.a-offscreen")
+                    price = price_element.get_attribute("outerHTML")
+                    parsed_price = get_price_from_html(price)
+                    print(f"Amazon Price: {parsed_price}")
+                    return parsed_price
+                except Exception as e:
+                    print(f"Amazon Error finding price: {e}")
+                    
+                    # Fallback: try alternative price selectors
+                    try:
+                        price_element = result.find_element(By.CSS_SELECTOR, "span.a-price")
+                        price = price_element.get_attribute("outerHTML")
+                        parsed_price = get_price_from_html(price)
+                        print(f"Amazon Price (fallback): {parsed_price}")
+                        return parsed_price
+                    except:
+                        return None
+            else:
+                print("No results found")
+                return None
                 
-                print(f"Amazon Price: {get_price_from_html(price)}")
-                return get_price_from_html(price)
-            except Exception as e:
-                print(f"Amazon Error finding price or title: {e}")
-                return None  # Skip if price or title not found
-        except TypeError as e:
+        except Exception as e:
             print(f"Amazon Error: {e}")
             return None
         finally:
             if self.driver:
-                self.driver.quit() 
+                self.driver.quit()
 
-scraper = AmazonScraper()
-price = scraper.get_price("jbl flip 6")
-print(f"Final Price: {price}")

@@ -4,12 +4,15 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from price_parser import get_price_from_html
 from scraper_config import get_proxy_config, get_chrome_options
+from selenium.webdriver.support.wait import TimeoutException
+import time
 
 class BestBuyScraper:
     def __init__(self):
         self.seleniumwire_options = get_proxy_config()
         self.options = get_chrome_options()
         self.driver = None
+        self.timeout = 20  # Set consistent timeout
 
     def get_price(self, product_name):
         self.driver = webdriver.Chrome(
@@ -17,33 +20,62 @@ class BestBuyScraper:
             options=self.options
         )
         
+        print("Driver initialized")
         try:
             query = product_name.replace(" ", "+")
+            print("Query: ", query)
+            start_time = time.time()
+            
+            # Set timeouts
+            self.driver.set_page_load_timeout(self.timeout)
+            self.driver.set_script_timeout(self.timeout)
+            
+            # Load the page
             self.driver.get(f"https://www.bestbuy.com/site/searchpage.jsp?st={query}")
+            print(f"Time taken to load Best Buy: {time.time() - start_time:.2f} seconds")
             
-            # Wait for the search results to load
-            WebDriverWait(self.driver, 30).until(
-                EC.presence_of_element_located((By.CSS_SELECTOR, "li.sku-item"))
-            )
-            
-            # Find the product by matching the name in image alt text
-            result = WebDriverWait(self.driver, 10).until(
-                EC.presence_of_element_located((By.CLASS_NAME, "sku-item"))
-            )
-
             try:
-                # Get the product price
-                price_element = result.find_element(By.CSS_SELECTOR, "div.priceView-customer-price span[aria-hidden='true']")
-                price = price_element.get_attribute("innerHTML")
+                # Wait for search results container
+                WebDriverWait(self.driver, self.timeout).until(
+                    EC.presence_of_element_located((By.CLASS_NAME, "sku-item"))
+                )
+            except TimeoutException:
+                # If timeout occurs, try to find element anyway
+                pass
                 
-                print(f"Best Buy Price: {get_price_from_html(price)}")
-                return price
-            except Exception as e:
-                print(f"Best Buy Error finding price: {e}")
+            # Get all product items without waiting
+            results = self.driver.find_elements(By.CLASS_NAME, "sku-item")
+            
+            if results:
+                result = results[0]  # Take the first result
+                try:
+                    # Wait for price element to be present and visible
+                    price_element = WebDriverWait(self.driver, self.timeout).until(
+                        EC.presence_of_element_located((By.CSS_SELECTOR, "div.priceView-customer-price span[aria-hidden='true']"))
+                    )
+                    # Additional wait for visibility
+                    WebDriverWait(self.driver, self.timeout).until(
+                        EC.visibility_of(price_element)
+                    )
+                    
+                    price = price_element.get_attribute("innerHTML")
+                    parsed_price = get_price_from_html(price)
+                    print(f"Best Buy Price: {parsed_price}")
+                    return parsed_price
+                except TimeoutException as e:
+                    print(f"Best Buy Error: Price element not found within {self.timeout} seconds")
+                    return None
+                except Exception as e:
+                    print(f"Best Buy Error finding price: {e}")
+                    return None
+            else:
+                print("No results found")
                 return None
+                
         except Exception as e:
             print(f"Best Buy Error: {e}")
             return None
         finally:
             if self.driver:
-                self.driver.quit() 
+                self.driver.quit()
+
